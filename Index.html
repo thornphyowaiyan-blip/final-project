@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walking journey is telling a healthy story</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* 🇺🇳 OFFICIAL UN CORES & PALETTE */
+        :root {
+            --un-blue: #1abc9c;          /* Fresh Mint Teal for primary lines/walk bars */
+            --un-navy: #2c3e50;          /* Deep Slate for high-contrast corporate headers */
+            --un-dark-gray: #7f8c8d;      /* Calm Gray for readable body text */
+            --un-light-gray: #f8f9fa;     /* Crisp background cards */
+            --un-border: #e2e8f0;         /* Sharp dividing borders */
+            --accent-red: #e74c3c;        /* Vibrant Red for high pain indicators */
+            --accent-green: #2ecc71;      /* Emerald for positive marks */
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* UN Standard Font Stack */
+            background-color: #ffffff;
+            color: var(--un-navy);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        /* 🌐 TOP EMBASSY EMBLEM BANNER */
+        .un-top-bar {
+            background-color: var(--un-navy);
+            color: #ffffff;
+            padding: 12px 40px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-bottom: 4px solid var(--un-blue);
+        }
+
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 40px;
+        }
+
+        /* 📋 SECTION MARGINS */
+        header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--un-border);
+            padding-bottom: 20px;
+        }
+        
+        h1 { 
+            font-size: 32px; 
+            font-weight: 300; /* Clean, modern light weighting */
+            color: var(--un-navy); 
+            margin: 0 0 10px 0; 
+        }
+        
+        h2 { 
+            font-size: 20px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            color: var(--un-navy);
+            border-bottom: 1px solid var(--un-navy);
+            padding-bottom: 8px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        p { color: var(--un-dark-gray); font-size: 14px; }
+
+        /* 🗂️ UN GLOBAL KPI CARD MATRIX */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+        .kpi-card {
+            background: var(--un-light-gray);
+            border: 1px solid var(--un-border);
+            padding: 20px;
+            border-top: 4px solid var(--un-blue); /* Distinctive UN indicator strip */
+        }
+        .kpi-title { font-size: 11px; text-transform: uppercase; color: var(--un-dark-gray); font-weight: bold; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 28px; font-weight: bold; color: var(--un-navy); margin: 5px 0; }
+
+        /* 📊 PLOT CANVAS ARRAYS */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .chart-box {
+            background: #ffffff;
+            border: 1px solid var(--un-border);
+            padding: 25px;
+        }
+        .chart-box h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--un-navy);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        /* 🖌| D3 GRAPHICS STYLE PARADIGM */
+        .step-bar {
+            fill: var(--un-blue);
+            opacity: 0.25;                /* Soft opacity so it stays in the background */
+            transition: height 0.3s, y 0.3s;
+        }
+        .line-pain {
+            fill: none;
+            stroke: var(--accent-red);    /* Sharp red for prominence */
+            stroke-width: 2.5;
+        }
+        .trend-line {
+            fill: none;
+            stroke: #d9534f;              /* Sharp accent-red line to indicate a warning/growth trend */
+            stroke-width: 2.5;            /* Clearly visible width */
+            stroke-dasharray: 4 4;        /* High-end dashed look common in scientific journals */
+        }
+        .bar-early-sleep { fill: var(--un-navy); }
+        .bar-late-sleep { fill: var(--accent-red); }
+        .sleep-legend-text { font-size: 11px; font-weight: bold; fill: var(--un-navy); }
+        .sleep-bar-label { font-size: 11px; font-weight: bold; text-anchor: middle; fill: #1e293b; }
+        .dot { opacity: 0.85; }
+        .dot-background { 
+            fill: #cbd5e1 !important; 
+            opacity: 0.3; 
+}
+        .dot-active { 
+            opacity: 0.9; 
+            transition: r 0.2s ease;
+}
+        .axis-label { font-size: 10px; fill: var(--un-dark-gray); text-transform: uppercase; font-weight: bold; }
+        .grid line { stroke: #eaeded; shape-rendering: crispEdges; }
+        .domain { stroke: var(--un-border); }
+        .tick line { stroke: var(--un-border); }
+
+        /* KPI Bars for Diagnostic Splits */
+        .bar-chores { fill: var(--un-navy); }
+        .bar-walk { fill: var(--un-blue); }
+
+        /* ⚖️ REPORT COLUMNS */
+        .report-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .report-block h4 { margin-top: 0; color: var(--un-navy); font-size: 16px; }
+        .ethical-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        .ethical-card {
+            border: 1px solid var(--un-border);
+            padding: 20px;
+            background-color: var(--un-light-gray);
+            font-size: 13px;
+        }
+        .ethical-card h5 { margin-top: 0; margin-bottom: 10px; font-size: 13px; text-transform: uppercase; color: var(--un-navy); }
+    </style>
+</head>
+<body>
+
+<div class="un-top-bar">Walking Journey is telling a healthy story</div>
+
+<div class="container">
+
+    <header>
+        <h1>Personal Health Behavior Dashboard: Lifestyle Factors Associated with Cervical Pain</h1>
+        <p><strong>Project Story: 
+
+        </strong> This dashboard explores how everyday lifestyle behaviors may influence cervical pain patterns using personal health tracking data collected from March to May. The project transforms daily experiences into measurable evidence by examining relationships among physical activity, screen exposure, sleep habits, and household workload.
+
+The purpose of this project is to identify behavioral patterns associated with pain fluctuations and support evidence-based personal decision-making. Instead of relying only on memory or subjective feelings, this dashboard uses data visualization to reveal trends that may influence health outcomes.</p>
+    </header>
+
+    <div class="controls-panel" style="display: flex; gap: 15px; flex-wrap: wrap; background: var(--un-light-gray); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--un-border);">
+    
+    <div class="control-group" style="display: flex; flex-direction: column; gap: 5px;">
+        <label for="time-range-filter" style="font-size: 12px; font-weight: bold; color: var(--un-navy);">📅 Time Range Filter</label>
+        <select id="time-range-filter" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--un-dark-gray); font-size: 12px;">
+            <option value="all">All Data</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+        </select>
+    </div>
+
+    <div class="control-group" style="display: flex; flex-direction: column; gap: 5px;">
+        <label for="screen-exposure-filter" style="font-size: 12px; font-weight: bold; color: var(--un-navy);">📱 Screen Exposure Filter</label>
+        <select id="screen-exposure-filter" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--un-dark-gray); font-size: 12px;">
+            <option value="all">All Screen Levels</option>
+            <option value="low">Low (<6h)</option>
+            <option value="medium">Medium (6–7h)</option>
+            <option value="high">High (>7h)</option>
+        </select>
+    </div>
+
+    <div class="control-group" style="display: flex; flex-direction: column; gap: 5px;">
+        <label for="sleep-timing-filter" style="font-size: 12px; font-weight: bold; color: var(--un-navy);">🌙 Sleep Timing Filter</label>
+        <select id="sleep-timing-filter" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--un-dark-gray); font-size: 12px;">
+            <option value="all">All Sleep Times</option>
+            <option value="before">Before Midnight</option>
+            <option value="after">After Midnight</option>
+        </select>
+    </div>
+
+    <div class="control-group" style="display: flex; flex-direction: column; gap: 5px;">
+        <label for="activity-steps-filter" style="font-size: 12px; font-weight: bold; color: var(--un-navy);">🚶 Activity Filter</label>
+        <select id="activity-steps-filter" style="padding: 6px 12px; border-radius: 4px; border: 1px solid var(--un-dark-gray); font-size: 12px;">
+            <option value="all">All Step Volumes</option>
+            <option value="low">Low Steps < 2k</option>
+            <option value="medium">Medium Steps 2-5k</option>
+            <option value="high">High Steps >5k</option>
+        </select>
+    </div>
+</div>
+
+    <section class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-title">Active Cohort Sample</div>
+            <div class="kpi-value" id="kpi-days">-- Days</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Average Step Volume</div>
+            <div class="kpi-value" id="kpi-steps" style="color: var(--un-blue);">-- Steps</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Peak Pain in Selection</div>
+            <div class="kpi-value" id="kpi-pain" style="color: var(--accent-red);">-- / 10</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Average Sleep Duration</div>
+            <div class="kpi-value" id="kpi-sleep">-- Hours</div>
+        </div>
+    </section>
+
+    <h2>📊 Empirical Indicator Visualizations</h2>
+    <main class="dashboard-grid">
+        
+        <div class="chart-box">
+            <h3>Fig 1.1: Daily Walking Activity and Cervical Pain Trends Over Time</h3>
+            <div id="chart-timeline"></div>
+        </div>
+
+        <div class="chart-box">
+            <h3>Fig 1.2: Relationship Between Screen Time and Cervical Pain</h3>
+        <div id="chart-scatter"></div>
+
+        <p style="font-size: 11px; font-weight: bold; color: var(--un-dark-gray); margin-top: 15px; border-top: 1px dashed var(--un-border); padding-top: 10px;">
+    📊      <strong>Scatter Plot Guide:</strong> Light gray circles represent your historical baseline (all weekly days logged). Blue and red circles highlight the specific observations matching your active filter criteria.
+        </p>
+        </div>
+
+        <div class="chart-box">
+            <h3>Fig 1.3: Effects of Sleep Timing and Sleep Duration on Cervical Pain</h3>
+            <div id="chart-sleep-interaction"></div>
+        </div>
+
+        <div class="chart-box">
+            <h3>Fig 1.4: Sleep Timing Effects on Next-Day Activity and Pain</h3>
+            <div id="chart-sleep-steps"></div>
+        </div>
+
+<div class="row" style="margin-top: 30px;">
+    
+    <div class="col-md-6 dashboard-card">
+        <h3>Fig 1.5a: Combined Effects of Screen Time and Walking Activity on Cervical Pain</h3>
+        <div id="chart-heatmap-digital"></div>
+    </div>
+
+    <div class="col-md-6 dashboard-card">
+        <h3>Fig 1.5b: Combined Effects of Household Choresand Sleeping Time on Cervical Pain</h3>
+        <div id="chart-heatmap-labor"></div>
+    </div>
+
+        <div id="bar-chores" style="display:none;"></div>
+        <div id="bar-walk" style="display:none;"></div>
+    </main>
+
+    <h2>🔍 Analysis & Strategic Decisions</h2>
+    <section class="report-section">
+        <div class="report-block">
+            <h4>Key Analytical Insights</h4>
+            <p>Insight 1. <strong>Walking Activity and Cervical Pain:</strong> 🚶 Walking activity alone does not consistently explain cervical pain fluctuations.</p>
+            <p>Insight 2. <strong>Screen Time and Cervical Pain:</strong> 📱 Higher screen exposure appears associated with increased pain scores.</p>
+            <p>Insight 3. <strong>The Sleep Deprivation Link:</strong> 🌙 Sleeping after midnight is associated with higher cervical pain outcomes.</p>
+            <p>Insight 4. <strong>Interconnected Lifestyle Factors:</strong> ⚡ Multiple lifestyle behaviors interact together rather than acting independently.</p>
+        </div>
+        <div class="report-block" style="border-left: 1px solid var(--un-border); padding-left: 40px;">
+    <h4 style="margin-top: 0; color: var(--un-navy, #1e293b); font-weight: 700;">Decision-Making Section</h4>
+    <p><strong>Future Actions Based on Data:</strong> Based on personal tracking data, future health decisions should focus on improving behavioral consistency rather than changing one factor alone.</p>
+    
+    <p><strong>Planned Actions:</strong></p>
+    <ul style="list-style: none; padding-left: 5px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px;">
+        <li style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="color: #10b981; font-weight: bold;">✓</span> 
+            <span><strong>Maintain regular daily movement:</strong> Keep steps up to buffer physical strains.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="color: #10b981; font-weight: bold;">✓</span> 
+            <span><strong>Reduce prolonged screen exposure:</strong> Break up long coding and study blocks to prevent static posture strain.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="color: #10b981; font-weight: bold;">✓</span> 
+            <span><strong>Prioritize sleeping before midnight:</strong> Focus on early rest windows to maximize quality recovery.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="color: #10b981; font-weight: bold;">✓</span> 
+            <span><strong>Monitor workload balance during high-stress periods:</strong> Track physical labor like household chores against study sessions.</span>
+        </li>
+    </ul>
+</div>
+    </section>
+
+    <h2>⚖️ Accountability, Ethics & Metadata Standards</h2>
+    <section class="ethical-grid">
+        <div class="ethical-card">
+            <h5>🔒 Privacy Statement</h5>
+            <p>This dashboard contains only personal behavioral tracking information including step counts, screen exposure duration, sleep timing, household workload intensity, and self-reported pain scores.
+
+No identifying personal information, location data, account information, or sensitive private identifiers are included.</p>
+        </div>
+        <div class="ethical-card">
+            <h5>⚠️ Limitations and Bias Considerations</h5>
+            <p>Several limitations should be considered when interpreting findings: <em> Small personal dataset collected across a limited timeframe</em> Pain scores involve subjective self-reporting <em>Hardware Omission Bias</em> Memory bias may influence manually recorded observations.<em>Correlation does not indicate direct causation.</em><em> Factors not tracked may influence pain outcomes</em>.</p>
+        </div>
+        <div class="ethical-card">
+            <h5>📊 Visualization Justification</h5>
+            <p>Figure 1.1 Timeline: Shows changes over time and reveals longitudinal trends.
+                Figure 1.2 Scatterplot:Identifies relationships between screen exposure and pain.
+                Figure 1.3 Grouped Bar Chart:Supports direct comparison across sleep categories.
+                Figure 1.4 Combined Bar-Line Chart:Displays activity and pain outcomes simultaneously.
+                Figure 1.5 Heatmap:Reveals multi-variable interaction patterns.
+                Misinterpretation Risk Statement: Visual patterns represent associations rather than medical proof. Findings should be interpreted carefully.</p>
+        </div>
+    </section>
+
+    <div style="padding: 15px 20px; background: #fffbf0; border: 1px solid #f39c12; font-size: 13px; color: #7d5a00; font-weight: bold; text-transform: capitalize; letter-spacing: 0.5px; margin-top: 25px;">
+        ⚠️ Responsible Decision Boundary: These optimization declarations serve purely as behavioural analytics tracking and do not constitute formal therapeutic prescriptions or clinical advice.
+    </div>
+
+</div>
+
+<script>
+let data = []; // Comprehensive storage array for active observations
+
+const margin = {top: 30, right: 60, bottom: 50, left: 60},
+      width = 620 - margin.left - margin.right,
+      height = 340 - margin.top - margin.bottom;
+
+// Load and read the spreadsheet framework securely
+d3.csv("My_glory_Journey_cleaned.csv").then(function(loadedData) {
+    const parseDate = d3.timeParse("%Y-%m-%d");
+    
+    data = loadedData.map(d => {
+        // Safe check to prevent errors if a row is completely blank at the end of the file
+        if (!d.Date) return null; 
+        
+        return {
+            Date: parseDate(d.Date.trim()),
+            Steps: +String(d.Steps).replace(/,/g, '') || 0, // Strips any random commas from numbers
+            Active_time: +d["Active_time(min)"] || 0,
+            Distance_KM: +d.Distance_KM || 0,
+            Total_Calories_burned: +String(d.Total_Calories_burned).replace(/,/g, '') || 0,
+            Sleep_after_midnight: +d.Sleep_after_midnight || 0,
+            Sleep_Hours: +d.Sleep_Hours || 0,
+            Pain_Score: +d["Pain_Score (0-10)"] || 0,
+            Class_Hours: +d.Class_Hours || 0,
+            Study_Hours: +d.Study_Hours || 0,
+            Walk_Encoded: +d["Morning_Walk (1/0)"] || 0,
+            Chores_Encoded: +d["Heavy_Chores (1/0)"] || 0,
+            total_screen_time: +d.total_screen_time || 0
+        };
+    }).filter(d => d !== null && d.Date !== null); // Cleans up trailing empty data gaps safely
+
+    // Initialize all canvas structures once on startup
+    initTimeline();
+    initScatter();
+    initSleepGroup();
+    initSleepSteps();
+    initHeatmapMatrix();
+
+    // Fire the filters immediately to render your true maximum values
+    applyDashboardFilters();
+});
+
+// =================================================================
+// SYSTEM SUMMARY STATISTICS KPI CALCULATOR
+// =================================================================
+function updateKPIs(activeSet) {
+    if (activeSet.length === 0) {
+        d3.select("#kpi-days").text("0 Days");
+        d3.select("#kpi-steps").text("0 Steps");
+        d3.select("#kpi-pain").text("0 / 10");
+        d3.select("#kpi-sleep").text("0 Hours");
+        return;
+    }
+
+    // 1. Calculate active samples
+    d3.select("#kpi-days").text(activeSet.length + " Days");
+    
+    // 2. Average Steps Calculation
+    const avgSteps = d3.mean(activeSet, d => d.Steps) || 0;
+    d3.select("#kpi-steps").text(Math.round(avgSteps).toLocaleString() + " Steps");
+    
+    // 3. Peak Pain Score Calculation
+    const peakPain = d3.max(activeSet, d => d.Pain_Score) || 0;
+    d3.select("#kpi-pain").text(peakPain + " / 10");
+    
+    // 4. Average Nightly Sleep Duration
+    const avgSleep = d3.mean(activeSet, d => d.Sleep_Hours) || 0;
+    d3.select("#kpi-sleep").text(avgSleep.toFixed(1) + " Hours");
+}
+
+// =================================================================
+// UNIFIED FILTERING PARSING ENGINE (HANDLES ALL 4 CONTROLS)
+// =================================================================
+// =================================================================
+// REPAIRED UNIFIED FILTER ENGINE
+// =================================================================
+function applyDashboardFilters() {
+    // Read selections from your exact new HTML select IDs
+    const selectedTimeRange = d3.select("#time-range-filter").property("value");
+    const selectedScreen    = d3.select("#screen-exposure-filter").property("value");
+    const selectedSleep     = d3.select("#sleep-timing-filter").property("value");
+    const selectedActivity  = d3.select("#activity-steps-filter").property("value");
+
+    // Start fresh with a copy of your complete master dataset
+    let filteredData = [...data];
+
+    // 1. Evaluate Calendar Month Filter (March=3, April=4, May=5)
+    if (selectedTimeRange !== "all") {
+        const targetMonth = parseInt(selectedTimeRange);
+        filteredData = filteredData.filter(d => {
+            // Check if the date object exists before checking the month
+            if (d.Date) {
+                const monthNumber = d.Date.getMonth() + 1; // JS months are 0-11, so we add 1
+                return monthNumber === targetMonth;
+            }
+            return false;
+        });
+    }
+
+    // 2. Evaluate Screen Exposure Habits
+    if (selectedScreen === "low") {
+        filteredData = filteredData.filter(d => d.total_screen_time < 6);
+    } else if (selectedScreen === "medium") {
+        filteredData = filteredData.filter(d => d.total_screen_time >= 6 && d.total_screen_time <= 7);
+    } else if (selectedScreen === "high") {
+        filteredData = filteredData.filter(d => d.total_screen_time > 7);
+    }
+
+    // 3. Evaluate Sleep Latency Latitudes (0 = Before Midnight, 1 = After Midnight)
+    if (selectedSleep === "before") {
+        filteredData = filteredData.filter(d => d.Sleep_after_midnight === 0);
+    } else if (selectedSleep === "after") {
+        filteredData = filteredData.filter(d => d.Sleep_after_midnight === 1);
+    }
+
+    // 4. Evaluate Activity Steps Volume Categories
+    if (selectedActivity === "low") {
+        filteredData = filteredData.filter(d => d.Steps < 2000);
+    } else if (selectedActivity === "medium") {
+        filteredData = filteredData.filter(d => d.Steps >= 2000 && d.Steps <= 5000);
+    } else if (selectedActivity === "high") {
+        filteredData = filteredData.filter(d => d.Steps > 5000);
+    }
+
+    // 5. Instantly push the cleanly segmented data to refresh all plots & KPIs
+    renderTimeline(filteredData);
+    renderScatter(filteredData);
+    renderSleepChart(filteredData);
+    renderSleepStepsChart(filteredData);
+    renderHeatmapMatrix(filteredData);
+    updateKPIs(filteredData);
+}
+function switchHeatmapMetric(metric) {
+    window.activeHeatmapMetric = metric; // Force declaration globally
+    
+    if (metric === 'pain') {
+        d3.select("#btn-view-pain").style("background", "var(--un-navy, #1e293b)").style("color", "white");
+        d3.select("#btn-view-chores").style("background", "#e2e8f0").style("color", "#334155");
+    } else {
+        d3.select("#btn-view-chores").style("background", "var(--un-navy, #1e293b)").style("color", "white");
+        d3.select("#btn-view-pain").style("background", "#e2e8f0").style("color", "#334155");
+    }
+    
+    applyDashboardFilters();
+}
+// Bind the change events to the new elements so they trigger updates instantly
+d3.select("#time-range-filter").on("change", applyDashboardFilters);
+d3.select("#screen-exposure-filter").on("change", applyDashboardFilters);
+d3.select("#sleep-timing-filter").on("change", applyDashboardFilters);
+d3.select("#activity-steps-filter").on("change", applyDashboardFilters);
+// =================================================================
+// INITIALIZATION AND PLOT RENDER ENGINES
+// =================================================================
+let svgTime, xTime, ySteps, yPain;
+function initTimeline() {
+    svgTime = d3.select("#chart-timeline").append("svg")
+        .attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    xTime = d3.scaleTime().domain(d3.extent(data, d => d.Date)).range([0, width]);
+    ySteps = d3.scaleLinear().domain([0, d3.max(data, d => d.Steps) * 1.05]).range([height, 0]);
+    yPain = d3.scaleLinear().domain([0, 10]).range([height, 0]);
+
+    svgTime.append("g").attr("class", "grid").call(d3.axisLeft(ySteps).tickSize(-width).tickFormat(""));
+    svgTime.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xTime).ticks(5));
+    svgTime.append("g").call(d3.axisLeft(ySteps).ticks(6));
+    svgTime.append("g").attr("transform", `translate(${width},0)`).call(d3.axisRight(yPain).ticks(5));
+
+    svgTime.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("x", width/2).attr("y", height + 40).text("(March – May)");
+    svgTime.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("transform", "rotate(-90)").attr("y", -48).attr("x", -height/2).text("Daily Steps");
+    svgTime.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("transform", "rotate(90)").attr("y", -width - 48).attr("x", height/2).text("Pain Score (0-10)");
+}
+
+function renderTimeline(timelineData) {
+    const bars = svgTime.selectAll(".step-bar").data(timelineData, d => d.Date);
+    bars.exit().transition().duration(250).attr("height", 0).attr("y", height).remove();
+    
+    bars.enter().append("rect")
+        .attr("class", "step-bar")
+        .attr("y", height).attr("height", 0)
+        .merge(bars)
+        .transition().duration(400)
+        .attr("x", d => xTime(d.Date) - 2.5)
+        .attr("y", d => ySteps(d.Steps))
+        .attr("width", 5)
+        .attr("height", d => height - ySteps(d.Steps));
+
+    svgTime.selectAll(".line-pain").remove();
+    const linePainFn = d3.line()
+        .x(d => xTime(d.Date))
+        .y(d => yPain(d.Pain_Score))
+        .defined(d => !isNaN(d.Pain_Score));
+
+    svgTime.append("path").datum(timelineData).attr("class", "line-pain").attr("d", linePainFn);
+}
+
+let svgScatter, xScatter, yScatter, scatterBackgroundG, scatterActiveG;
+function initScatter() {
+    svgScatter = d3.select("#chart-scatter").append("svg")
+        .attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    xScatter = d3.scaleLinear().domain([0, d3.max(data, d => d.total_screen_time) + 1]).range([0, width]);
+    yScatter = d3.scaleLinear().domain([0, 10]).range([height, 0]);
+
+    svgScatter.append("g").attr("class", "grid").call(d3.axisLeft(yScatter).tickSize(-width).tickFormat(""));
+    svgScatter.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xScatter));
+    svgScatter.append("g").call(d3.axisLeft(yScatter));
+
+    // Create separate, dedicated layers inside the SVG container
+    scatterBackgroundG = svgScatter.append("g").attr("class", "background-layer");
+    scatterActiveG = svgScatter.append("g").attr("class", "active-layer");
+
+    svgScatter.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("x", width/2).attr("y", height + 40).text(" Daily Screen Time (Hours)");
+    svgScatter.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("transform", "rotate(-90)").attr("y", -45).attr("x", -height/2).text("Cervical Pain Score (0-10)");
+}
+
+function renderScatter(plotData) {
+    // A helper function to add a tiny random shift (-0.15 to +0.15) to prevent overlapping
+    function jitter() {
+        return (Math.random() - 0.5) * 0.3;
+    }
+
+    // 1. Force-render ALL historical dataset records as persistent gray circles
+    const allDots = scatterBackgroundG.selectAll(".dot-background")
+        .data(data, d => d.Date); // Binds global data array
+
+    allDots.exit().remove();
+
+    allDots.enter().append("circle")
+        .attr("class", "dot-background")
+        .merge(allDots)
+        // REPAIR: Added jitter() to the X and Y positioning elements so they spread beautifully
+        .attr("cx", d => xScatter(d.total_screen_time + jitter()))
+        .attr("cy", d => yScatter(d.Pain_Score + jitter()))
+        .attr("r", 4.5)
+        .style("fill", "#cbd5e1") 
+        .style("opacity", 0.4);
+
+    // 2. Clear and overlay the dynamically filtered subset rows in bold colors
+    const activeDots = scatterActiveG.selectAll(".dot-active")
+        .data(plotData, d => d.Date); // Binds filtered data subset
+
+    activeDots.exit().transition().duration(200).attr("r", 0).remove();
+
+    activeDots.enter().append("circle")
+        .attr("class", "dot-active")
+        .attr("r", 0)
+        .merge(activeDots)
+        .transition().duration(300)
+        // REPAIR: Apply the exact same jitter mapping to active selections so they align perfectly
+        .attr("cx", d => xScatter(d.total_screen_time + jitter()))
+        .attr("cy", d => yScatter(d.Pain_Score + jitter()))
+        .attr("r", 6) // Distinctly larger to overlay cleanly
+        .style("fill", d => d.Pain_Score > 3 ? "var(--accent-red)" : "var(--un-blue)")
+        .style("opacity", 0.95);
+
+    // 3. Keep the trend line locked onto the actively filtered subset selection
+    svgScatter.selectAll(".trend-line").remove();
+    if (plotData.length > 1) {
+        const n = plotData.length;
+        let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+        plotData.forEach(d => {
+            const x = d.total_screen_time;
+            const y = d.Pain_Score;
+            sumX += x; sumY += y; sumXY += (x * y); sumXX += (x * x);
+        });
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        const xMin = 0;
+        const xMax = d3.max(plotData, d => d.total_screen_time) || 12;
+        const y1 = slope * xMin + intercept;
+        const y2 = slope * xMax + intercept;
+
+        svgScatter.append("line")
+            .attr("class", "trend-line")
+            .attr("x1", xScatter(xMin)).attr("y1", yScatter(y1))
+            .attr("x2", xScatter(xMax)).attr("y2", yScatter(y2));
+    }
+}
+let svgSleepGroup, xGroupScale, xSubgroupScale, ySleepPain;
+function initSleepGroup() {
+    svgSleepGroup = d3.select("#chart-sleep-interaction").append("svg")
+        .attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // REPAIRED: Your customized, realistic sleep hour intervals
+    const xSleepGroups = ["low Rest (<5h)", "Moderate Rest (5-6h)", "Functional Rest (>6h)"];
+    xGroupScale = d3.scaleBand().domain(xSleepGroups).rangeRound([0, width]).paddingInner(0.25);
+    xSubgroupScale = d3.scaleBand().domain(["0", "1"]).rangeRound([0, xGroupScale.bandwidth()]).padding(0.05);
+    ySleepPain = d3.scaleLinear().domain([0, 10]).range([height, 0]);
+
+    svgSleepGroup.append("g").attr("class", "grid").call(d3.axisLeft(ySleepPain).tickSize(-width).tickFormat(""));
+    svgSleepGroup.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xGroupScale));
+    svgSleepGroup.append("g").call(d3.axisLeft(ySleepPain).ticks(5));
+
+    svgSleepGroup.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("x", width/2).attr("y", height + 40).text("Sleep Duration Category");
+    svgSleepGroup.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("transform", "rotate(-90)").attr("y", -45).attr("x", -height/2).text("Pain Score (0-10)");
+
+    const legendGroup = svgSleepGroup.append("g").attr("transform", `translate(${width - 180}, 10)`);
+    legendGroup.append("rect").attr("width", 12).attr("height", 12).attr("fill", "var(--un-navy)");
+    legendGroup.append("text").attr("x", 18).attr("y", 10).attr("class", "sleep-legend-text").text("Slept Before Midnight");
+    legendGroup.append("rect").attr("y", 18).attr("width", 12).attr("height", 12).attr("fill", "var(--accent-red)");
+    legendGroup.append("text").attr("x", 18).attr("y", 28).attr("class", "sleep-legend-text").text("Slept After Midnight (Late)");
+}
+
+function renderSleepChart(rawTimelineData) {
+    svgSleepGroup.selectAll(".sleep-bar-node").remove();
+    svgSleepGroup.selectAll(".sleep-bar-label").remove();
+
+    // REPAIRED: Structural map matching your new domain intervals exactly
+    const initialMap = [
+        { category: "low Rest (<5h)", "0": [], "1": [] },
+        { category: "Moderate Rest (5-6h)", "0": [], "1": [] },
+        { category: "Functional Rest (>6h)", "0": [], "1": [] }
+    ];
+
+    rawTimelineData.forEach(d => {
+        const sleepHrs = Number(d.Sleep_Hours) || 0;
+        const subGroupKey = String(d.Sleep_after_midnight).trim();
+        
+        // REPAIRED: New mathematical boundary filtering splits
+        let catIndex = 1; // Defaults to the middle group (5-6h)
+        if (sleepHrs < 5.0) {
+            catIndex = 0;   // Drops into <5h
+        } else if (sleepHrs > 6.0) {
+            catIndex = 2;   // Drops into >6h
+        }
+
+        if (initialMap[catIndex] && initialMap[catIndex][subGroupKey]) {
+            initialMap[catIndex][subGroupKey].push(d.Pain_Score);
+        }
+    });
+
+    const flattenedAggregates = [];
+    initialMap.forEach(group => {
+        ["0", "1"].forEach(subKey => {
+            const arr = group[subKey];
+            const meanValue = arr.length > 0 ? d3.mean(arr) : 0;
+            flattenedAggregates.push({ groupName: group.category, subGroupName: subKey, avgPain: meanValue });
+        });
+    });
+
+    svgSleepGroup.selectAll(".sleep-bar-node")
+        .data(flattenedAggregates).enter().append("rect")
+        .attr("class", d => `sleep-bar-node ${d.subGroupName === "1" ? "bar-late-sleep" : "bar-early-sleep"}`)
+        .attr("x", d => xGroupScale(d.groupName) + xSubgroupScale(d.subGroupName))
+        .attr("y", height).attr("width", xSubgroupScale.bandwidth()).attr("height", 0)
+        .transition().duration(450)
+        .attr("y", d => ySleepPain(d.avgPain)).attr("height", d => height - ySleepPain(d.avgPain));
+
+    svgSleepGroup.selectAll(".sleep-bar-label")
+        .data(flattenedAggregates).enter().append("text")
+        .attr("class", "sleep-bar-label")
+        .attr("x", d => xGroupScale(d.groupName) + xSubgroupScale(d.subGroupName) + xSubgroupScale.bandwidth() / 2)
+        .attr("y", d => ySleepPain(d.avgPain) - 6)
+        .attr("text-anchor", "middle")
+        .style("font-size", "10px").style("font-weight", "bold")
+        .text(d => d.avgPain > 0 ? d.avgPain.toFixed(2) : "0.00");
+}
+
+let svgSleepSteps, xSleepLatScale, ySleepStepsScale, yPainScale;
+function initSleepSteps() {
+    svgSleepSteps = d3.select("#chart-sleep-steps").append("svg")
+        .attr("width", width + margin.left + margin.right + 20).attr("height", height + margin.top + margin.bottom)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const xSleepLatGroups = ["Slept Before Midnight", "Slept After Midnight (Late)"];
+    xSleepLatScale = d3.scaleBand().domain(xSleepLatGroups).rangeRound([0, width]).padding(0.4);
+    ySleepStepsScale = d3.scaleLinear().domain([0, 12000]).range([height, 0]);
+    yPainScale = d3.scaleLinear().domain([0, 10]).range([height, 0]);
+
+    svgSleepSteps.append("g").attr("class", "grid").call(d3.axisLeft(ySleepStepsScale).tickSize(-width).tickFormat(""));
+    svgSleepSteps.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xSleepLatScale));
+    svgSleepSteps.append("g").call(d3.axisLeft(ySleepStepsScale).ticks(6));
+    svgSleepSteps.append("g").attr("transform", `translate(${width}, 0)`).call(d3.axisRight(yPainScale).ticks(5));
+
+    svgSleepSteps.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("x", width/2).attr("y", height + 40).text("Sleep Timing Group");
+    svgSleepSteps.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("transform", "rotate(-90)").attr("y", -48).attr("x", -height/2).text("Average Daily Steps");
+    svgSleepSteps.append("text").attr("class", "axis-label").attr("text-anchor", "middle")
+        .attr("transform", "rotate(90)").attr("y", -width - 48).attr("x", height/2).text("Pain Score (0-10)");
+}
+
+function renderSleepStepsChart(rawTimelineData) {
+    svgSleepSteps.selectAll(".steps-latency-bar").remove();
+    svgSleepSteps.selectAll(".pain-latency-dot").remove();
+    svgSleepSteps.selectAll(".latency-bar-label").remove();
+    svgSleepSteps.selectAll(".latency-line-path").remove();
+
+    const aggregateLat = { "0": { steps: [], pain: [] }, "1": { steps: [], pain: [] } };
+    rawTimelineData.forEach(d => {
+        const subKey = String(d.Sleep_after_midnight).trim();
+        if (aggregateLat[subKey]) {
+            aggregateLat[subKey].steps.push(d.Steps);
+            aggregateLat[subKey].pain.push(d.Pain_Score);
+        }
+    });
+
+    const categoriesMapped = [
+        { label: "Slept Before Midnight", key: "0", meanSteps: d3.mean(aggregateLat["0"].steps) || 0, meanPain: d3.mean(aggregateLat["0"].pain) || 0 },
+        { label: "Slept After Midnight (Late)", key: "1", meanSteps: d3.mean(aggregateLat["1"].steps) || 0, meanPain: d3.mean(aggregateLat["1"].pain) || 0 }
+    ];
+
+    svgSleepSteps.selectAll(".steps-latency-bar")
+        .data(categoriesMapped).enter().append("rect")
+        .attr("class", "steps-latency-bar").style("fill", "var(--un-blue)").style("opacity", 0.4)
+        .attr("x", d => xSleepLatScale(d.label)).attr("y", height)
+        .attr("width", xSleepLatScale.bandwidth()).attr("height", 0)
+        .transition().duration(450)
+        .attr("y", d => ySleepStepsScale(d.meanSteps)).attr("height", d => height - ySleepStepsScale(d.meanSteps));
+
+    svgSleepSteps.selectAll(".latency-bar-label")
+        .data(categoriesMapped).enter().append("text")
+        .attr("class", "latency-bar-label").attr("text-anchor", "middle")
+        .style("font-size", "11px").style("font-weight", "bold").style("fill", "var(--un-navy)")
+        .attr("x", d => xSleepLatScale(d.label) + xSleepLatScale.bandwidth() / 2)
+        .attr("y", d => ySleepStepsScale(d.meanSteps) - 6)
+        .text(d => d.meanSteps > 0 ? Math.round(d.meanSteps) + " Steps" : "0 Steps");
+
+    const overlayLineFn = d3.line().x(d => xSleepLatScale(d.label) + xSleepLatScale.bandwidth() / 2).y(d => yPainScale(d.meanPain));
+    svgSleepSteps.append("path").datum(categoriesMapped).attr("class", "latency-line-path")
+        .attr("fill", "none").attr("stroke", "var(--accent-red)").attr("stroke-width", 2.5).attr("d", overlayLineFn);
+
+    svgSleepSteps.selectAll(".pain-latency-dot")
+        .data(categoriesMapped).enter().append("circle")
+        .attr("class", "pain-latency-dot").attr("fill", "var(--accent-red)").attr("r", 5)
+        .attr("cx", d => xSleepLatScale(d.label) + xSleepLatScale.bandwidth() / 2).attr("cy", d => yPainScale(d.meanPain));
+}
+
+// Global scale and selection hooks for dual maps
+let svgHeatmapDigital, svgHeatmapLabor;
+let xScaleDig, yScaleDig, xScaleLab, yScaleLab;
+let xBinsSleep, yBinsSteps, xBinsScreen, yBinsChores;
+
+function initHeatmapMatrix() {
+    // Automatically uses the exact same width/height variables as Figs 1.1 and 1.2!
+    xBinsScreen = ["Low Screen Time(<4h)", "Mid Screen Time (4-7h)", "High Screen Time (>7h)"];
+    yBinsSteps  = ["High Steps (>4k)", "Mid Steps (2-4k)", "Low Steps (0-2k)"];
+    
+    xBinsSleep  = ["Low rest (<4h)", "Moderate Rest (4-6h)", "Optimal Rest (>6h)"];
+    yBinsChores = ["Heavy Chores (Yes)", "Light Chores (No)"];
+
+    // --- INITIALIZE MAP A (DIGITAL) ---
+    svgHeatmapDigital = d3.select("#chart-heatmap-digital").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    xScaleDig = d3.scaleBand().domain(xBinsScreen).range([0, width]).padding(0.06);
+    yScaleDig = d3.scaleBand().domain(yBinsSteps).range([0, height]).padding(0.06);
+
+    svgHeatmapDigital.append("g").attr("class", "axis-heatmap x-axis-dig").attr("transform", `translate(0,${height})`);
+    svgHeatmapDigital.append("g").attr("class", "axis-heatmap y-axis-dig");
+
+    // --- INITIALIZE MAP B (LABOR) ---
+    svgHeatmapLabor = d3.select("#chart-heatmap-labor").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    xScaleLab = d3.scaleBand().domain(xBinsSleep).range([0, width]).padding(0.06);
+    yScaleLab = d3.scaleBand().domain(yBinsChores).range([0, height]).padding(0.06);
+
+    svgHeatmapLabor.append("g").attr("class", "axis-heatmap x-axis-lab").attr("transform", `translate(0,${height})`);
+    svgHeatmapLabor.append("g").attr("class", "axis-heatmap y-axis-lab");
+}
+
+function renderHeatmapMatrix(rawTimelineData) {
+    // Wipe canvas clean before updates
+    svgHeatmapDigital.selectAll(".tile-dig").remove();
+    svgHeatmapDigital.selectAll(".text-dig").remove();
+    svgHeatmapLabor.selectAll(".tile-lab").remove();
+    svgHeatmapLabor.selectAll(".text-lab").remove();
+
+    // Re-draw clean axis labels using global height
+    svgHeatmapDigital.select(".axis-heatmap.x-axis-dig").call(d3.axisBottom(xScaleDig)).selectAll("text").style("font-weight", "600");
+    svgHeatmapDigital.select(".axis-heatmap.y-axis-dig").call(d3.axisLeft(yScaleDig)).selectAll("text").style("font-weight", "600");
+    svgHeatmapLabor.select(".axis-heatmap.x-axis-lab").call(d3.axisBottom(xScaleLab)).selectAll("text").style("font-weight", "600");
+    svgHeatmapLabor.select(".axis-heatmap.y-axis-lab").call(d3.axisLeft(yScaleLab)).selectAll("text").style("font-weight", "600");
+
+    // Initialize blank data objects
+    let matrixDig = {}; xBinsScreen.forEach(x => { matrixDig[x] = {}; yBinsSteps.forEach(y => { matrixDig[x][y] = { maxPain: 0, count: 0 }; }); });
+    let matrixLab = {}; xBinsSleep.forEach(x => { matrixLab[x] = {}; yBinsChores.forEach(y => { matrixLab[x][y] = { maxPain: 0, count: 0 }; }); });
+
+    // Loop through dataset rows
+    rawTimelineData.forEach(d => {
+        const sleep = Number(d.Sleep_Hours) || 0;
+        const steps = Number(d.Steps) || 0;
+        const pain = Number(d.Pain_Score) || 0;
+        const screen = Number(d.total_screen_time) || Number(d.Total_Screen_Time) || 0;
+        const isChore = String(d.Chores_Encoded || d.chores_encoded || "").trim();
+
+        // Map A Sorting Math (Screen vs Steps)
+        let xBinDig = "Low Screen Time (<4h)";
+        if (screen >= 4 && screen <= 7) xBinDig = "Mid Screen Time (4-7h)";
+        else if (screen > 7) xBinDig = "High Screen Time (>7h)";
+
+        let yBinDig = "Low Steps (0-2k)";
+        if (steps >= 2000 && steps <= 4000) yBinDig = "Mid Steps (2-4k)";
+        else if (steps > 4000) yBinDig = "High Steps (>4k)";
+
+        if (matrixDig[xBinDig] && matrixDig[xBinDig][yBinDig]) {
+            matrixDig[xBinDig][yBinDig].count += 1;
+            if (pain > matrixDig[xBinDig][yBinDig].maxPain) matrixDig[xBinDig][yBinDig].maxPain = pain;
+        }
+
+        // Map B Sorting Math (Sleep vs Chores)
+        let xBinLab = "Low Rest (4h)";
+        if (sleep >= 4 && sleep <= 6) xBinLab = "Moderate Rest (4-6h)";
+        else if (sleep > 6) xBinLab = "Optimal Rest (>6h)";
+
+        let yBinLab = "Light Chores (No)";
+        if (isChore === "1" || isChore === "yes" || isChore === "true") yBinLab = "Heavy Chores (Yes)";
+
+        if (matrixLab[xBinLab] && matrixLab[xBinLab][yBinLab]) {
+            matrixLab[xBinLab][yBinLab].count += 1;
+            if (pain > matrixLab[xBinLab][yBinLab].maxPain) matrixLab[xBinLab][yBinLab].maxPain = pain;
+        }
+    });
+
+    // Flatten Map A Data
+    let flatDig = []; xBinsScreen.forEach(x => { yBinsSteps.forEach(y => { flatDig.push({ x: x, y: y, maxPain: matrixDig[x][y].maxPain, count: matrixDig[x][y].count }); }); });
+    // Flatten Map B Data
+    let flatLab = []; xBinsSleep.forEach(x => { yBinsChores.forEach(y => { flatLab.push({ x: x, y: y, maxPain: matrixLab[x][y].maxPain, count: matrixLab[x][y].count }); }); });
+
+    // Standard Bulletproof Color Engine (Cold Blue to Pain Crimson)
+    const colorScale = d3.scaleLinear().domain([0, 10]).range(["#4a90e2", "#dc3545"]);
+
+    // --- DRAW MAP A NODES ---
+    svgHeatmapDigital.selectAll(".tile-dig").data(flatDig).enter().append("rect").attr("class", "tile-dig")
+        .attr("x", d => xScaleDig(d.x)).attr("y", d => yScaleDig(d.y))
+        .attr("width", xScaleDig.bandwidth()).attr("height", yScaleDig.bandwidth()).attr("rx", 4).attr("ry", 4)
+        .style("fill", d => d.count > 0 ? colorScale(d.maxPain) : "#f4f4f4").style("stroke", "#fff").style("stroke-width", "2px");
+
+    svgHeatmapDigital.selectAll(".text-dig").data(flatDig).enter().append("text").attr("class", "text-dig")
+        .attr("x", d => xScaleDig(d.x) + xScaleDig.bandwidth()/2).attr("y", d => yScaleDig(d.y) + yScaleDig.bandwidth()/2 + 4)
+        .attr("text-anchor", "middle").style("font-weight", "bold").style("font-size", "11px")
+        .style("fill", d => d.maxPain > 5 ? "#fff" : "#222").text(d => d.count > 0 ? d.maxPain + " Pain" : "No Data");
+
+    // --- DRAW MAP B NODES ---
+    svgHeatmapLabor.selectAll(".tile-lab").data(flatLab).enter().append("rect").attr("class", "tile-lab")
+        .attr("x", d => xScaleLab(d.x)).attr("y", d => yScaleLab(d.y))
+        .attr("width", xScaleLab.bandwidth()).attr("height", yScaleLab.bandwidth()).attr("rx", 4).attr("ry", 4)
+        .style("fill", d => d.count > 0 ? colorScale(d.maxPain) : "#f4f4f4").style("stroke", "#fff").style("stroke-width", "2px");
+
+    svgHeatmapLabor.selectAll(".text-lab").data(flatLab).enter().append("text").attr("class", "text-lab")
+        .attr("x", d => xScaleLab(d.x) + xScaleLab.bandwidth()/2).attr("y", d => yScaleLab(d.y) + yScaleLab.bandwidth()/2 + 4)
+        .attr("text-anchor", "middle").style("font-weight", "bold").style("font-size", "11px")
+        .style("fill", d => d.maxPain > 5 ? "#fff" : "#222").text(d => d.count > 0 ? d.maxPain + " Pain" : "No Data");
+}
+</script>
+
+</body>
+</html>
