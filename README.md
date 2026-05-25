@@ -62,7 +62,6 @@ Key observations:
 •	Moderate rest and heavy household chores are causing 7 levels of pain.
 •	Functional rests with heavy household chores could trigger 8 pain scores.
 •	Functional rests with lower chores reduced the pain score of 2.
-•	Lower rests with lower chores caused 6 levels of pain.
 The results indicate that physical workload contributes to discomfort while having a functional rest. Sleep quality is also another factor causing moderate pain.
 Overall findings
 Several major trends occurred in the dashboard.
