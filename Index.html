@@ -260,7 +260,7 @@ The purpose of this project is to identify behavioral patterns associated with p
         <div id="chart-scatter"></div>
 
         <p style="font-size: 11px; font-weight: bold; color: var(--un-dark-gray); margin-top: 15px; border-top: 1px dashed var(--un-border); padding-top: 10px;">
-    📊      <strong>Scatter Plot Guide:</strong> Light gray circles represent your historical baseline (all weekly days logged). Blue and red circles highlight the specific observations matching your active filter criteria.
+    📊      <strong>Scatter Plot Guide:</strong> Light gray circles show all recorded observations (historical baseline). Blue and red circles highlight data points that match the current filter selection.
         </p>
         </div>
 
@@ -274,20 +274,19 @@ The purpose of this project is to identify behavioral patterns associated with p
             <div id="chart-sleep-steps"></div>
         </div>
 
-<div class="row" style="margin-top: 30px;">
+    <div class="row" style="margin-top: 40px; margin-left: 15px; margin-right: 15px; padding-left: 10px; padding-right: 10px;">
     
-    <div class="col-md-6 dashboard-card">
-        <h3>Fig 1.5a: Combined Effects of Screen Time and Walking Activity on Cervical Pain</h3>
-        <div id="chart-heatmap-digital"></div>
+    <div class="col-md-6 dashboard-card" style="margin-bottom: 20px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 20px;">Fig 1.5a: Combined Effects of Screen Time and Walking Activity on Cervical Pain</h3>
+        <div id="chart-heatmap-digital" style="overflow-x: visible;"></div>
     </div>
 
-    <div class="col-md-6 dashboard-card">
-        <h3>Fig 1.5b: Combined Effects of Household Choresand Sleeping Time on Cervical Pain</h3>
-        <div id="chart-heatmap-labor"></div>
+    <div class="col-md-6 dashboard-card" style="margin-bottom: 20px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 20px;"> Fig 1.5b: Combined Effects of Household Chores and Sleeping Time on Cervical Pain</h3>
+        <div id="chart-heatmap-labor" style="overflow-x: visible;"></div>
     </div>
 
-        <div id="bar-chores" style="display:none;"></div>
-        <div id="bar-walk" style="display:none;"></div>
+</div>
     </main>
 
     <h2>🔍 Analysis & Strategic Decisions</h2>
@@ -307,15 +306,15 @@ The purpose of this project is to identify behavioral patterns associated with p
     <ul style="list-style: none; padding-left: 5px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px;">
         <li style="display: flex; align-items: flex-start; gap: 8px;">
             <span style="color: #10b981; font-weight: bold;">✓</span> 
-            <span><strong>Maintain regular daily movement:</strong> Keep steps up to buffer physical strains.</span>
+            <span><strong>Maintain regular daily movement:</strong> Keep steps up to control physical strains.</span>
         </li>
         <li style="display: flex; align-items: flex-start; gap: 8px;">
             <span style="color: #10b981; font-weight: bold;">✓</span> 
-            <span><strong>Reduce prolonged screen exposure:</strong> Break up long coding and study blocks to prevent static posture strain.</span>
+            <span><strong>Reduce prolonged screen exposure:</strong> Study and do with break time for long coding and study sessions to prevent static posture strain.</span>
         </li>
         <li style="display: flex; align-items: flex-start; gap: 8px;">
             <span style="color: #10b981; font-weight: bold;">✓</span> 
-            <span><strong>Prioritize sleeping before midnight:</strong> Focus on early rest windows to maximize quality recovery.</span>
+            <span><strong>Prioritize sleeping before midnight:</strong> Rest before midnight to maximize quality recovery.</span>
         </li>
         <li style="display: flex; align-items: flex-start; gap: 8px;">
             <span style="color: #10b981; font-weight: bold;">✓</span> 
@@ -357,7 +356,7 @@ No identifying personal information, location data, account information, or sens
 <script>
 let data = []; // Comprehensive storage array for active observations
 
-const margin = {top: 30, right: 60, bottom: 50, left: 60},
+const margin = {top: 40, right: 40, bottom: 85, left: 80},
       width = 620 - margin.left - margin.right,
       height = 340 - margin.top - margin.bottom;
 
@@ -550,8 +549,51 @@ function renderTimeline(timelineData) {
         .x(d => xTime(d.Date))
         .y(d => yPain(d.Pain_Score))
         .defined(d => !isNaN(d.Pain_Score));
-
+        
     svgTime.append("path").datum(timelineData).attr("class", "line-pain").attr("d", linePainFn);
+
+    // =================================================================
+    // FIXED CORNER LEGEND (TIED DIRECTLY TO svgTime)
+    // =================================================================
+    
+    // 1. Wipe out any old legend containers before drawing the new filtered state
+    svgTime.selectAll(".chart-legend-box").remove();
+
+    // 2. Create a fresh group container shifted to the upper-right corner
+    const legendGroup = svgTime.append("g")
+        .attr("class", "chart-legend-box")
+        .attr("transform", `translate(${width - 110}, -35)`); // Shifted to fit perfectly in the corner margin
+
+    // 3. Draw the Blue Walking Steps Indicator Box
+    legendGroup.append("rect")
+        .attr("width", 12)
+        .attr("height", 12)
+        .attr("rx", 3) // Smooth rounded corners
+        .style("fill", "#1abc9c"); // Classic movement blue
+
+    legendGroup.append("text")
+        .attr("x", 18)
+        .attr("y", 10)
+        .style("font-size", "11px")
+        .style("font-weight", "600")
+        .style("fill", "#334155")
+        .text("Walking Steps");
+
+    // 4. Draw the Crimson Pain Score Indicator Box (Stacked cleanly below)
+    legendGroup.append("rect")
+        .attr("y", 18) // Shifts down 18 pixels so it lines up 1-by-1 vertically
+        .attr("width", 12)
+        .attr("height", 12)
+        .attr("rx", 3)
+        .style("fill", "#dc3545"); // Pain tracking warning red
+
+    legendGroup.append("text")
+        .attr("x", 18)
+        .attr("y", 28) // Shifts text down to match its color box
+        .style("font-size", "11px")
+        .style("font-weight", "600")
+        .style("fill", "#334155")
+        .text("Pain Score");
 }
 
 let svgScatter, xScatter, yScatter, scatterBackgroundG, scatterActiveG;
@@ -792,6 +834,50 @@ function renderSleepStepsChart(rawTimelineData) {
         .data(categoriesMapped).enter().append("circle")
         .attr("class", "pain-latency-dot").attr("fill", "var(--accent-red)").attr("r", 5)
         .attr("cx", d => xSleepLatScale(d.label) + xSleepLatScale.bandwidth() / 2).attr("cy", d => yPainScale(d.meanPain));
+
+    // =================================================================
+    // NEW ADDITION: CORNER LEGEND BOX (TIED TO svgSleepSteps)
+    // =================================================================
+    
+    // 1. Wipe out old copies before redrawing
+    svgSleepSteps.selectAll(".chart-legend-box").remove();
+
+    // 2. Create container group and shift to the upper right corner space
+    const legendGroup = svgSleepSteps.append("g")
+        .attr("class", "chart-legend-box")
+        .attr("transform", `translate(${width - 130}, -20)`);
+
+    // 3. Draw Average Daily Steps Key Box (Using your exact step fill colors & opacity)
+    legendGroup.append("rect")
+        .attr("width", 12)
+        .attr("height", 12)
+        .attr("rx", 3)
+        .style("fill", "var(--un-blue)")
+        .style("opacity", 0.5); 
+
+    legendGroup.append("text")
+        .attr("x", 18)
+        .attr("y", 10)
+        .style("font-size", "11px")
+        .style("font-weight", "600")
+        .style("fill", "#334155")
+        .text("Avg Daily Steps");
+
+    // 4. Draw Mean Pain Score Key Box (Using your exact accent warning red)
+    legendGroup.append("rect")
+        .attr("y", 18) // Offset downwards so they list 1-by-1 vertically
+        .attr("width", 12)
+        .attr("height", 12)
+        .attr("rx", 3)
+        .style("fill", "var(--accent-red)");
+
+    legendGroup.append("text")
+        .attr("x", 18)
+        .attr("y", 28) // Offset text downwards to stay inline with color marker
+        .style("font-size", "11px")
+        .style("font-weight", "600")
+        .style("fill", "#334155")
+        .text("Pain Score (0 - 10)");
 }
 
 // Global scale and selection hooks for dual maps
@@ -800,32 +886,47 @@ let xScaleDig, yScaleDig, xScaleLab, yScaleLab;
 let xBinsSleep, yBinsSteps, xBinsScreen, yBinsChores;
 
 function initHeatmapMatrix() {
-    // Automatically uses the exact same width/height variables as Figs 1.1 and 1.2!
+    // 1. Create a spacious custom margin object JUST for these two heatmaps
+    // Setting a dedicated left padding of 130px guarantees labels like "Heavy Chores (Yes)" will never be cut off!
+    const mapMargin = { top: 30, right: 30, bottom: 90, left: 130 };
+    
+    // Use an independent display width so they don't fight for screen space
+    const mapWidth = width - 40; 
+
     xBinsScreen = ["Low Screen Time(<4h)", "Mid Screen Time (4-7h)", "High Screen Time (>7h)"];
     yBinsSteps  = ["High Steps (>4k)", "Mid Steps (2-4k)", "Low Steps (0-2k)"];
     
-    xBinsSleep  = ["Low rest (<4h)", "Moderate Rest (4-6h)", "Optimal Rest (>6h)"];
+    // Change <4h to <5h so your actual shorter sleep nights show up!
+    xBinsSleep = ["Low rest (<5h)", "Moderate Rest (5-7h)", "Optimal Rest (>7h)"];
     yBinsChores = ["Heavy Chores (Yes)", "Light Chores (No)"];
 
     // --- INITIALIZE MAP A (DIGITAL) ---
+    // Clear out any old canvas residue first
+    d3.select("#chart-heatmap-digital").selectAll("svg").remove();
+    
     svgHeatmapDigital = d3.select("#chart-heatmap-digital").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        .attr("width", mapWidth + mapMargin.left + mapMargin.right)
+        .attr("height", height + mapMargin.top + mapMargin.bottom)
+        .append("g")
+        .attr("transform", `translate(${mapMargin.left},${mapMargin.top})`); // Pushes the whole graph right
 
-    xScaleDig = d3.scaleBand().domain(xBinsScreen).range([0, width]).padding(0.06);
+    xScaleDig = d3.scaleBand().domain(xBinsScreen).range([0, mapWidth]).padding(0.06);
     yScaleDig = d3.scaleBand().domain(yBinsSteps).range([0, height]).padding(0.06);
 
     svgHeatmapDigital.append("g").attr("class", "axis-heatmap x-axis-dig").attr("transform", `translate(0,${height})`);
     svgHeatmapDigital.append("g").attr("class", "axis-heatmap y-axis-dig");
 
     // --- INITIALIZE MAP B (LABOR) ---
-    svgHeatmapLabor = d3.select("#chart-heatmap-labor").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    // Clear out any old canvas residue first
+    d3.select("#chart-heatmap-labor").selectAll("svg").remove();
 
-    xScaleLab = d3.scaleBand().domain(xBinsSleep).range([0, width]).padding(0.06);
+    svgHeatmapLabor = d3.select("#chart-heatmap-labor").append("svg")
+        .attr("width", mapWidth + mapMargin.left + mapMargin.right)
+        .attr("height", height + mapMargin.top + mapMargin.bottom)
+        .append("g")
+        .attr("transform", `translate(${mapMargin.left},${mapMargin.top})`); // Pushes the whole graph right
+
+    xScaleLab = d3.scaleBand().domain(xBinsSleep).range([0, mapWidth]).padding(0.06);
     yScaleLab = d3.scaleBand().domain(yBinsChores).range([0, height]).padding(0.06);
 
     svgHeatmapLabor.append("g").attr("class", "axis-heatmap x-axis-lab").attr("transform", `translate(0,${height})`);
@@ -838,6 +939,8 @@ function renderHeatmapMatrix(rawTimelineData) {
     svgHeatmapDigital.selectAll(".text-dig").remove();
     svgHeatmapLabor.selectAll(".tile-lab").remove();
     svgHeatmapLabor.selectAll(".text-lab").remove();
+    svgHeatmapDigital.selectAll(".heatmap-instruction-box").remove();
+    svgHeatmapLabor.selectAll(".heatmap-instruction-box").remove();
 
     // Re-draw clean axis labels using global height
     svgHeatmapDigital.select(".axis-heatmap.x-axis-dig").call(d3.axisBottom(xScaleDig)).selectAll("text").style("font-weight", "600");
@@ -845,7 +948,7 @@ function renderHeatmapMatrix(rawTimelineData) {
     svgHeatmapLabor.select(".axis-heatmap.x-axis-lab").call(d3.axisBottom(xScaleLab)).selectAll("text").style("font-weight", "600");
     svgHeatmapLabor.select(".axis-heatmap.y-axis-lab").call(d3.axisLeft(yScaleLab)).selectAll("text").style("font-weight", "600");
 
-    // Initialize blank data objects
+    // Initialize blank data objects using the EXACT array definitions from your setup
     let matrixDig = {}; xBinsScreen.forEach(x => { matrixDig[x] = {}; yBinsSteps.forEach(y => { matrixDig[x][y] = { maxPain: 0, count: 0 }; }); });
     let matrixLab = {}; xBinsSleep.forEach(x => { matrixLab[x] = {}; yBinsChores.forEach(y => { matrixLab[x][y] = { maxPain: 0, count: 0 }; }); });
 
@@ -855,10 +958,12 @@ function renderHeatmapMatrix(rawTimelineData) {
         const steps = Number(d.Steps) || 0;
         const pain = Number(d.Pain_Score) || 0;
         const screen = Number(d.total_screen_time) || Number(d.Total_Screen_Time) || 0;
-        const isChore = String(d.Chores_Encoded || d.chores_encoded || "").trim();
+        
+        // Flexible chore text mapping to avoid empty parsing errors
+        const choreRaw = String(d.Chores || d.Chores_Encoded || d.chores_encoded || "").toLowerCase().trim();
 
-        // Map A Sorting Math (Screen vs Steps)
-        let xBinDig = "Low Screen Time (<4h)";
+        // --- MAP A SORTING MATH (SCREEN VS STEPS) ---
+        let xBinDig = "Low Screen Time(<4h)";
         if (screen >= 4 && screen <= 7) xBinDig = "Mid Screen Time (4-7h)";
         else if (screen > 7) xBinDig = "High Screen Time (>7h)";
 
@@ -871,14 +976,18 @@ function renderHeatmapMatrix(rawTimelineData) {
             if (pain > matrixDig[xBinDig][yBinDig].maxPain) matrixDig[xBinDig][yBinDig].maxPain = pain;
         }
 
-        // Map B Sorting Math (Sleep vs Chores)
-        let xBinLab = "Low Rest (4h)";
-        if (sleep >= 4 && sleep <= 6) xBinLab = "Moderate Rest (4-6h)";
-        else if (sleep > 6) xBinLab = "Optimal Rest (>6h)";
+        // --- MAP B SORTING MATH (SLEEP VS CHORES) ---
+        let xBinLab = "Low rest (<5h)";
+        if (sleep >= 5 && sleep <= 7) xBinLab = "Moderate Rest (5-7h)";
+        else if (sleep > 7) xBinLab = "Optimal Rest (>7h)";
 
+        // Flexible validation matching both numbers and "yes/no" phrases
         let yBinLab = "Light Chores (No)";
-        if (isChore === "1" || isChore === "yes" || isChore === "true") yBinLab = "Heavy Chores (Yes)";
+        if (choreRaw === "1" || choreRaw === "yes" || choreRaw === "true" || choreRaw === "heavy") {
+            yBinLab = "Heavy Chores (Yes)";
+        }
 
+        // Drop data points inside your labor tracking container
         if (matrixLab[xBinLab] && matrixLab[xBinLab][yBinLab]) {
             matrixLab[xBinLab][yBinLab].count += 1;
             if (pain > matrixLab[xBinLab][yBinLab].maxPain) matrixLab[xBinLab][yBinLab].maxPain = pain;
@@ -890,30 +999,67 @@ function renderHeatmapMatrix(rawTimelineData) {
     // Flatten Map B Data
     let flatLab = []; xBinsSleep.forEach(x => { yBinsChores.forEach(y => { flatLab.push({ x: x, y: y, maxPain: matrixLab[x][y].maxPain, count: matrixLab[x][y].count }); }); });
 
-    // Standard Bulletproof Color Engine (Cold Blue to Pain Crimson)
-    const colorScale = d3.scaleLinear().domain([0, 10]).range(["#4a90e2", "#dc3545"]);
+    // =================================================================
+    // 🎨 CLINICAL PAIN SCALE THRESHOLDS (MATCHING YOUR IMAGE EXACTLY)
+    // =================================================================
+    // Breaks domains strictly matching: 0 (White), 1-4 (Mild Green), 5-6 (Mod Yellow), 7-10 (Severe Red)
+    const painScaleClinical = d3.scaleThreshold()
+        .domain([0.5, 4.5, 6.5]) 
+        .range(["#fdfdfd", "#8cc63f", "#fff200", "#c1272d"]);
 
     // --- DRAW MAP A NODES ---
     svgHeatmapDigital.selectAll(".tile-dig").data(flatDig).enter().append("rect").attr("class", "tile-dig")
         .attr("x", d => xScaleDig(d.x)).attr("y", d => yScaleDig(d.y))
         .attr("width", xScaleDig.bandwidth()).attr("height", yScaleDig.bandwidth()).attr("rx", 4).attr("ry", 4)
-        .style("fill", d => d.count > 0 ? colorScale(d.maxPain) : "#f4f4f4").style("stroke", "#fff").style("stroke-width", "2px");
+        .style("fill", d => d.count > 0 ? painScaleClinical(d.maxPain) : "#f4f4f4")
+        .style("stroke", "#e2e8f0").style("stroke-width", "1.5px");
 
     svgHeatmapDigital.selectAll(".text-dig").data(flatDig).enter().append("text").attr("class", "text-dig")
         .attr("x", d => xScaleDig(d.x) + xScaleDig.bandwidth()/2).attr("y", d => yScaleDig(d.y) + yScaleDig.bandwidth()/2 + 4)
         .attr("text-anchor", "middle").style("font-weight", "bold").style("font-size", "11px")
-        .style("fill", d => d.maxPain > 5 ? "#fff" : "#222").text(d => d.count > 0 ? d.maxPain + " Pain" : "No Data");
+        // Changes text to white if background hits Severe Red for perfect accessibility contrast
+        .style("fill", d => d.count > 0 && d.maxPain >= 7 ? "#fff" : "#1e293b")
+        .text(d => d.count > 0 ? d.maxPain + " Pain" : "No Data");
 
     // --- DRAW MAP B NODES ---
     svgHeatmapLabor.selectAll(".tile-lab").data(flatLab).enter().append("rect").attr("class", "tile-lab")
         .attr("x", d => xScaleLab(d.x)).attr("y", d => yScaleLab(d.y))
         .attr("width", xScaleLab.bandwidth()).attr("height", yScaleLab.bandwidth()).attr("rx", 4).attr("ry", 4)
-        .style("fill", d => d.count > 0 ? colorScale(d.maxPain) : "#f4f4f4").style("stroke", "#fff").style("stroke-width", "2px");
+        .style("fill", d => d.count > 0 ? painScaleClinical(d.maxPain) : "#f4f4f4")
+        .style("stroke", "#e2e8f0").style("stroke-width", "1.5px");
 
     svgHeatmapLabor.selectAll(".text-lab").data(flatLab).enter().append("text").attr("class", "text-lab")
         .attr("x", d => xScaleLab(d.x) + xScaleLab.bandwidth()/2).attr("y", d => yScaleLab(d.y) + yScaleLab.bandwidth()/2 + 4)
         .attr("text-anchor", "middle").style("font-weight", "bold").style("font-size", "11px")
-        .style("fill", d => d.maxPain > 5 ? "#fff" : "#222").text(d => d.count > 0 ? d.maxPain + " Pain" : "No Data");
+        .style("fill", d => d.count > 0 && d.maxPain >= 7 ? "#fff" : "#1e293b")
+        .text(d => d.count > 0 ? d.maxPain + " Pain" : "No Data");
+
+    // =================================================================
+    // 🎨 UPDATED INSTRUCTION LEGENDS (MILITARY VETERANS STANDARDS)
+    // =================================================================
+    const instructionGroupA = svgHeatmapDigital.append("g").attr("class", "heatmap-instruction-box").attr("transform", `translate(0, ${height + 45})`);
+    instructionGroupA.append("text").style("font-size", "11px").style("font-weight", "700").style("fill", "#475569").text("💡 figure 1.5 (a): Pain factors between Digital screen time and step count ");
+    
+    instructionGroupA.append("rect").attr("x", 0).attr("y", 12).attr("width", 12).attr("height", 12).attr("rx", 2).style("fill", "#8cc63f");
+    instructionGroupA.append("text").attr("x", 16).attr("y", 22).style("font-size", "10px").style("fill", "#64748b").text("Mild (1-4)");
+    
+    instructionGroupA.append("rect").attr("x", 110).attr("y", 12).attr("width", 12).attr("height", 12).attr("rx", 2).style("fill", "#fff200").style("stroke", "#cbd5e1");
+    instructionGroupA.append("text").attr("x", 126).attr("y", 22).style("font-size", "10px").style("fill", "#64748b").text("Moderate (5-6)");
+    
+    instructionGroupA.append("rect").attr("x", 230).attr("y", 12).attr("width", 12).attr("height", 12).attr("rx", 2).style("fill", "#c1272d");
+    instructionGroupA.append("text").attr("x", 246).attr("y", 22).style("font-size", "10px").style("fill", "#64748b").text("Severe (7-10)");
+
+    const instructionGroupB = svgHeatmapLabor.append("g").attr("class", "heatmap-instruction-box").attr("transform", `translate(0, ${height + 45})`);
+    instructionGroupB.append("text").style("font-size", "11px").style("font-weight", "700").style("fill", "#475569").text("💡 Figure 1.5 (b): Labor and sleep time impact on pain scores");
+    
+    instructionGroupB.append("rect").attr("x", 0).attr("y", 12).attr("width", 12).attr("height", 12).attr("rx", 2).style("fill", "#8cc63f");
+    instructionGroupB.append("text").attr("x", 16).attr("y", 22).style("font-size", "10px").style("fill", "#64748b").text("Mild (1-4)");
+    
+    instructionGroupB.append("rect").attr("x", 110).attr("y", 12).attr("width", 12).attr("height", 12).attr("rx", 2).style("fill", "#fff200").style("stroke", "#cbd5e1");
+    instructionGroupB.append("text").attr("x", 126).attr("y", 22).style("font-size", "10px").style("fill", "#64748b").text("Moderate (5-6)");
+    
+    instructionGroupB.append("rect").attr("x", 230).attr("y", 12).attr("width", 12).attr("height", 12).attr("rx", 2).style("fill", "#c1272d");
+    instructionGroupB.append("text").attr("x", 246).attr("y", 22).style("font-size", "10px").style("fill", "#64748b").text("Severe (7-10)");
 }
 </script>
 
